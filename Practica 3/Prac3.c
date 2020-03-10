@@ -7,7 +7,7 @@ void gets(char *str);
 void printdec ( unsigned char dato );
 
 unsigned char Datos(unsigned int segment, unsigned int offset);
-unsigned char Direcciones(unsigned int segmento, unsigned int offset);
+unsigned char Direcciones(unsigned int segmento, unsigned int offset, unsigned char lines);
 
 char msggood[] =" Bien\r\n";
 char msgbad1[] =" Error\r\n";
@@ -17,98 +17,78 @@ char msgBData[]="Bus de Datos\r\n";
 char msgBDir[]="Bus de Direcciones\r\n";
 char salto[]="\r\n";
 
-unsigned int seg = 0x2200;
+unsigned int seg = 0x220;
 
-char Data = 0;
-char Dir = 0;
+char lines = 11;
+char Data,Dir;
 
 int main(void){
     while(1){
-        puts(msgBData);
         Data = Datos(seg,0);
-        puts(msgBDir);
-        Dir = Direcciones(seg,0);
-        if((Data == 0) && (Dir == 0)){
+        Dir = Direcciones(seg,0,lines);
+        if((Data) && (Dir)){
             puts(msgfatal);
         }
     getchar();
     }
-
     return 0;
 }
 
 unsigned char Datos(unsigned int segment, unsigned int offset){
-    unsigned char dato = 1, aux=0,e=0,i=0;
-    
+    unsigned char dato = 1,e=0,i=0;
+    puts(msgBData);
     while(dato != 0){
         
         poke(segment,offset,dato);
-        aux = peek(segment,offset);
-        printdec(i);
+        puts(msgLin);
+        printdec(i+1);
         i++;
 
-        if(dato != aux){
+        if(peek(segment,offset) != dato){
             puts(msgbad1);
-            puts(salto);
             e=1;
         }
         else{
             puts(msggood);
-            puts(salto);
         }
-        
+        puts(salto);
         dato = dato << 1; 
     }
-
-    if(e==1){
-        return 0;
-    }
-    return 1;
+    return e;
 }
 
-unsigned char Direcciones(unsigned int segmento, unsigned int offset){
-    unsigned char aux = 0;
-    unsigned int dir = offset,i = 0,e=0;
+unsigned char Direcciones(unsigned int segmento, unsigned int offset, unsigned char lines){
+    int dir,sucesss = 0,i=0;
+    char patron = 0xaa, e=0;
 
-    poke(segmento,dir,0);
-    aux = peek(segmento,dir);
-    puts(msgLin);
-    printdec(i);
-    i++;
-    if (aux != 0){            
-        puts(msgbad1);
-        puts(salto);
-        e=1;
-    }
-    else{
-        puts(msggood);
-        puts(salto);
-    }
+    puts(msgBDir);
 
-    dir++;
-
-    while (dir != 0){
+    for(dir = 1; dir < (1 << lines); dir = dir << 1){
         poke(segmento,dir,0);
-        aux = peek(segmento,dir);
-        puts(msgLin);
-        printdec(i);
-        i++;
-        if (aux != 0){            
-            puts(msgbad1);
-            puts(salto);
-            e=1;
-        }
-        else{
-            puts(msggood);
-            puts(salto);
-        }
-        dir = dir << 1; 
-    }
-    if(e==1){
-        return 0;
     }
 
-    return 1;
+    poke(segmento,offset,patron);
+
+    for(dir = 1; dir < (1 << lines); dir = dir << 1){
+        if((peek(segmento,dir) == patron) || peek(segmento,dir) != 0 ){
+            sucesss |= dir;
+        }
+    }
+    while (i < lines) {
+
+                puts(msgLin);
+                printdec(i+1);
+                if (sucesss & (1 << i)){
+                    puts(msgbad1);
+                    e=1;
+                }       
+                else{
+                    puts(msggood);
+                }    
+                puts(salto);
+                i++;
+        }
+    return e;
 }
 
 void puts ( char *str ){
