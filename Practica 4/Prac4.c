@@ -28,11 +28,12 @@ char lines = 11;
 
 int main(void){
     while(1){
-        /*
+        
         puts("A000\r\n");
+
         Datos(seg1,0);
         Direcciones(seg1,0,lines);
-*/ 
+
         puts("A000\r\n");
         veriDir(seg1);
 
@@ -66,8 +67,8 @@ void Datos(unsigned int segment, unsigned int offset){
 }
 
 void Direcciones(unsigned int segmento, unsigned int offset, unsigned char lines){
-    int dir,sucesss = 0,i=0;
-    char patron = 0xaa;
+    int dir,sucesss = 0;
+    char patron = 0x55,i=0;
 
     puts(msgBDir);
 
@@ -78,13 +79,16 @@ void Direcciones(unsigned int segmento, unsigned int offset, unsigned char lines
     poke(segmento,offset,patron);
 
     for(dir = 1; dir < (1 << lines); dir = dir << 1){
+        for(){
+            
+        }
+        
         if((peek(segmento,offset + dir) == patron) || peek(segmento,offset + dir) != 0 ){
             sucesss |= dir;
         }
     }
     while (i < lines) {
-
-        puts(msgLin);
+       puts(msgLin);
         printdec(i+1);
         if (sucesss & (1 << i)){
             puts(msgbad1);
